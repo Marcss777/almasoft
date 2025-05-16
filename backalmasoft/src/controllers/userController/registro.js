@@ -1,45 +1,4 @@
-const db = require('../../../db');
-const bcrypt = require('bcrypt');
-
-// Función para guardar un nuevo usuario
-async function guardarUsuario(req, res) {
-  const { nombreCompleto, correo, password, confirmPassword, rol } = req.body;
-
-  if (!nombreCompleto || !correo || !password || !confirmPassword) {
-    return res.status(400).json({ error: 'Todos los campos son requeridos' });
-  }
-
-  if (password !== confirmPassword) {
-    return res.status(400).json({ error: 'Las contraseñas no coinciden' });
-  }
-
-  console.log('Datos recibidos del formulario:', req.body);
-
-  try {
-    const checkQuery = 'SELECT * FROM users WHERE correo = $1';
-    const checkResult = await db.query(checkQuery, [correo]);
-
-    if (checkResult.rows.length > 0) {
-      return res.status(400).json({ error: 'El correo ya está registrado' });
-    }
-
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    const rolFinal = rol || 'usuario'; // si no se especifica, asigna 'usuario'
-
-    const query = `
-      INSERT INTO users (nombre_completo, correo, password, rol) 
-      VALUES ($1, $2, $3, $4) RETURNING *`;
-    const values = [nombreCompleto, correo, hashedPassword, rolFinal];
-    const result = await db.query(query, values);
-
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error('Error al guardar el usuario:', error.message, error.stack);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-}
+1
 
 
 // Función para obtener todos los usuarios
